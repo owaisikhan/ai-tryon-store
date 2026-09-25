@@ -54,7 +54,8 @@ export async function POST(request) {
             hint: error?.message,
           });
 
-    if (e.status >= 500) console.error(`[tryon] ${e.code}: ${[e.hint ?? e.message, e.advice].filter(Boolean).join(" ")}`);
+    // Log upstream trouble (and quota) to the terminal; skip the shopper's own mistakes.
+    if (e.status >= 500 || e.status === 429) console.error(`[tryon] ${e.code}: ${[e.hint ?? e.message, e.advice].filter(Boolean).join(" ")}`);
 
     return Response.json(
       {

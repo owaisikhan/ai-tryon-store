@@ -1,8 +1,9 @@
 import "server-only";
 import { ApiError, GoogleGenAI } from "@google/genai";
 import { tryOnConfig } from "@/app/_lib/tryon/config";
-import { TryOnError, parseRetryDelay } from "@/app/_lib/tryon/errors";
+import { TryOnError } from "@/app/_lib/tryon/errors";
 import { TRANSIENT, diagnoseNetworkError } from "@/app/_lib/tryon/network-diagnosis.mjs";
+import { describeQuota } from "@/app/_lib/tryon/quota-diagnosis.mjs";
 
 let client = null;
 function getClient() {
@@ -36,12 +37,7 @@ function translateError(error) {
   const status = error instanceof ApiError ? error.status : Number(error?.status) || 0;
   const text = error?.message ?? "";
 
-  if (status === 429) {
-    return new TryOnError(429, "rate_limited", "The fitting room is busy right now. Give it a moment and try again.", {
-      retryAfter: parseRetryDelay(text) ?? 30,
-      hint: "Gemini quota or rate limit reached (HTTP 429).",
-    });
-  }
+  if (status === 429) return translateQuota(text);
   if (status === 400 && /api key/i.test(text)) {
     return new TryOnError(503, "bad_key", "The fitting room is offline right now. Please try again later.", {
       hint: "Gemini rejected GEMINI_API_KEY. Check the key in .env.local.",
@@ -62,6 +58,32 @@ function translateError(error) {
   }
   return new TryOnError(502, "upstream", "Something went wrong while making the photo. Please try again.", {
     hint: `${status || "network"}: ${text.slice(0, 300)}`,
+  });
+}
+
+// Google answered 429. Which kind decides whether waiting can ever help.
+function translateQuota(text) {
+  const q = describeQuota(text);
+  const model = tryOnConfig.model;
+  const which = q.quotas.length ? ` Quota hit: ${q.quotas.join(", ")}.` : "";
+  const said = q.summary ? ` Google said: "${q.summary}"` : "";
+
+  if (q.zero) {
+    return new TryOnError(503, "no_quota", "The fitting room is offline right now. Please try again later.", {
+      hint: `Google allows this key 0 requests for ${model}${q.freeTier ? " on the free tier" : ""} (HTTP 429, limit: 0). Waiting will not help.`,
+      advice: `Image generation needs billing on the Google Cloud project behind this key. In Google AI Studio (https://aistudio.google.com/apikey), open the key's project and set up billing, then try again: no code change is needed. Until then, TRYON_MOCK=1 keeps the fitting room usable for UI work.${which}${said}`,
+    });
+  }
+  if (q.perDay) {
+    return new TryOnError(429, "daily_quota", "The fitting room has reached today's limit. Please try again tomorrow.", {
+      hint: `Today's quota for ${model} is used up (HTTP 429).`,
+      advice: `Daily Gemini limits reset at midnight Pacific time. A paid tier raises them.${which}${said}`,
+    });
+  }
+  return new TryOnError(429, "rate_limited", "The fitting room is busy right now. Give it a moment and try again.", {
+    retryAfter: q.retryAfter ?? 30,
+    hint: `Gemini per-minute rate limit reached (HTTP 429); Google asked to wait ${q.retryAfter ?? 30}s.`,
+    advice: `Too many requests in a short time for this key. It clears on its own; a paid tier raises the limit.${which}${said}`,
   });
 }
 

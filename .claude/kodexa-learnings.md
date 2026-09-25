@@ -20,6 +20,7 @@ for the rules.
 | L-002 | 2026-09-25 | gotcha | Treat a missing query param as missing before `Number()`; guard with a full-catalogue check | type: ecommerce | logged |
 | L-003 | 2026-09-25 | gap | No playbook for AI image features (try-on): server route, per-step chaining, result cache, mock mode | type: ecommerce | logged |
 | L-004 | 2026-09-25 | gotcha | Read `error.cause` on "fetch failed" and ship `npm run doctor` for any external API | all | ready |
+| L-005 | 2026-09-25 | gotcha | A 429 is not always "wait": read the quota body; `limit: 0` means billing, not a countdown | all | ready |
 
 ## Entries
 
@@ -53,4 +54,12 @@ for the rules.
 - **Lesson:** Node's fetch reports every network failure as "TypeError: fetch failed" and keeps the reason in `error.cause.code` (ENOTFOUND, ECONNREFUSED, a TLS code, or an AggregateError of them). Any server code calling an external API translates that cause into plain advice (DNS, blocked connection, intercepted certificate, proxy ignored without NODE_USE_ENV_PROXY=1), and the repo ships an `npm run doctor` that checks the key, DNS, HTTPS reach and key access without spending quota. The doctor must also send the app's real request shape (same SDK, same method, a payload of realistic size) through a free endpoint such as countTokens: a GET-only doctor reported "All good" on the machine where the try-on had failed, which leaves the user with no answer. Dev hints are split into a one-line cause and a collapsible fix so they never cover the UI they explain.
 - **Scope:** all (any app that calls an external API from the server)
 - **Target in skill:** references/types/ai-chatbot.md (error handling) and SKILL.md section 5 ("How done is proven")
+- **Status:** ready
+
+### L-005 · 2026-09-25 · medium · gotcha
+- **Said / saw:** user screenshot, "still the same issue, is the gemini call happening?": the panel showed "busy, Try again in 39s" and "Gemini quota or rate limit reached (HTTP 429)" while no try-on had ever succeeded on that key
+- **Context:** app/_lib/tryon/gemini.js mapped every 429 to a countdown; fixed with app/_lib/tryon/quota-diagnosis.mjs
+- **Lesson:** Metered AI APIs send HTTP 429 for three different things: a quota of zero (the free tier often has no image output), a used-up daily quota, and a per-minute rate limit. Only the last one is fixed by waiting. Read the error body (Google: QuotaFailure violations, "limit: N", RetryInfo) and show a countdown only for the per-minute case; for a zero quota say plainly that billing is needed. A free "doctor" cannot see generation quota, so it must say so rather than print "All good".
+- **Scope:** all (any app that calls a metered AI API)
+- **Target in skill:** references/types/ai-chatbot.md (error handling), with L-004
 - **Status:** ready

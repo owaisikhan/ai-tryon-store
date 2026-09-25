@@ -75,8 +75,8 @@ app/
     stores/                  cart, wishlist, toast (useSyncExternalStore + localStorage)
     fitting-room/            client: provider, use-try-on hook, fetch wrapper, upload resize
     tryon/                   server-only: config, service, gemini, prompt, cache, images, mock,
-                             rate-limit, errors; network-diagnosis.mjs is pure and shared with
-                             the doctor script (.mjs so plain Node imports it without warnings)
+                             rate-limit, errors; network-diagnosis.mjs and quota-diagnosis.mjs
+                             are pure (.mjs so plain Node checks and the doctor import them)
   _styles/globals.css        @theme tokens (by role), base rules, range slider
 public/
   models/models.json         preset models: id, name, gender, bodyType, skinTone, image
@@ -85,7 +85,8 @@ scripts/
   make-placeholders.mjs      regenerates placeholder images (--force to overwrite)
   tryon-doctor.mjs           npm run doctor (reads .env.local via @next/env)
   slop_scan.py               dash and AI-slop scanner (copied from kodexa-builder)
-  checks/                    npm run check: catalogue, fitting-room, network-diagnosis, overflow
+  checks/                    npm run check: catalogue, fitting-room, network-diagnosis,
+                             quota-diagnosis, overflow
 docs/                        UI_CONVENTIONS.md, CHANGELOG.md
 ```
 
@@ -125,9 +126,12 @@ Key ideas:
   development and shown in the panel as "Dev note" plus a collapsible "How to
   fix". A network failure (Node's bare "fetch failed") is translated by
   `network-diagnosis.mjs` from `error.cause.code` into DNS, blocked
-  connection or intercepted certificate, code `unreachable`. Gemini 429 becomes
-  a 429 with `retryAfter` from Gemini's `retryDelay`, and the panel counts down
-  before Retry comes back. Our own per-IP limit (12/min) returns the same shape.
+  connection or intercepted certificate, code `unreachable`. A Gemini 429 is
+  read by `quota-diagnosis.mjs` from Google's error body: `limit: 0` becomes
+  `no_quota` (503, no countdown: billing is the only fix), a per-day quota
+  becomes `daily_quota`, and a per-minute limit stays `rate_limited` (429 with
+  `retryAfter` from Google's `retryDelay`, and the panel counts down before
+  Retry comes back). Our own per-IP limit (12/min) returns the same shape.
 - **Prompt.** `tryon/prompt.js`: identity and scene locked first, then the
   slot instruction from `garment-slots.js`, then fidelity to the product image.
 - **Vercel.** The route reads images from `public/` with `fs`, so

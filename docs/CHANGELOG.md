@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.3 (2026-09-25)
+
+- Fixed: every Gemini 429 showed "busy, try again in 39s", but a key with an
+  image quota of 0 (the free tier's usual allowance for image output) can
+  never succeed by waiting. `app/_lib/tryon/quota-diagnosis.mjs` now reads
+  Google's error body: `limit: 0` becomes `no_quota` (no countdown; the dev
+  note says billing is needed), a daily quota becomes `daily_quota`, and only
+  a per-minute limit keeps the countdown. Google's own sentence and the quota
+  id appear under "How to fix".
+- 429s are now logged in the dev server terminal too.
+- `npm run doctor` says plainly that it cannot see generation quota.
+- Check added: `quota-diagnosis`, proven by reintroducing the bug.
+
 ## 0.1.2 (2026-09-25)
 
 - `npm run doctor` step 5: sends the app's real request shape (a POST with a

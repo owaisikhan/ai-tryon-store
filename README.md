@@ -71,7 +71,7 @@ never sent to the browser. Do not rename it with a `NEXT_PUBLIC_` prefix.
 | `npm run dev` / `npm run dev:mock` | Dev server, with real or mock try-on |
 | `npm run build` then `npm run start` / `npm run start:mock` | Production build and server |
 | `npm run doctor` | Checks your key and the connection to Google step by step, free |
-| `npm run check` | Regression checks (catalogue, fitting room, network diagnosis, overflow). Run against `start:mock` |
+| `npm run check` | Regression checks (catalogue, fitting room, network and quota diagnosis, overflow). Run against `start:mock` |
 | `npm run lint` | ESLint |
 | `npm run slop` | Fails on em or en dashes and filler copy anywhere in the repo |
 | `npm run placeholders` | Regenerates missing placeholder images (`-- --force` to redraw all) |
@@ -89,10 +89,13 @@ terminal running `npm run dev`. Shoppers only ever see the plain message.
 | could not connect (SELF_SIGNED_CERT_IN_CHAIN or another certificate code) | antivirus or a company proxy is intercepting HTTPS | turn off HTTPS scanning for Node, or set `NODE_EXTRA_CA_CERTS` to its root certificate |
 | Gemini rejected GEMINI_API_KEY | wrong or mistyped key | copy it again from AI Studio into `.env.local` |
 | 403 | key restricted, or image output needs billing | use an unrestricted key; check billing in AI Studio |
-| rate limit (429) | quota reached | wait for the countdown, or check limits |
+| Google allows this key 0 requests (limit: 0) | the key's plan has no image quota at all (typical of the free tier); waiting never helps | set up billing for the key's project in Google AI Studio, then try again |
+| Today's quota is used up | daily limit reached | resets at midnight Pacific time; a paid tier raises it |
+| per-minute rate limit (429) | too many requests in a short time | wait for the countdown |
 
 `npm run doctor` runs the same checks outside the app and says which step
-fails. If every step passes but a try-on failed earlier, the block was
+fails. It uses no generation quota, so it cannot tell whether your key may
+generate images; the first try-on does. If every step passes but a try-on failed earlier, the block was
 probably temporary (a VPN or antivirus switching on); try again, and the Dev
 note will name the cause if it happens again. Restart the dev server after
 changing `.env.local`.

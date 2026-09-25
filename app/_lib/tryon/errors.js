@@ -13,9 +13,3 @@ export class TryOnError extends Error {
     this.advice = advice;
   }
 }
-
-// Gemini puts the suggested wait in the error body as "retryDelay": "31s".
-export function parseRetryDelay(text) {
-  const match = /retryDelay["'\s:]+["']?(\d+(?:\.\d+)?)s/i.exec(String(text ?? ""));
-  return match ? Math.ceil(Number(match[1])) : null;
-}

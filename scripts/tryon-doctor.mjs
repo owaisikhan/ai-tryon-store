@@ -163,4 +163,9 @@ try {
   }
 }
 
-console.log("\nAll good. If a try-on still fails, the Dev note in the fitting room names the reason.\n");
+console.log(`
+All good for the connection and the key. These checks use no generation
+quota, so they cannot see whether this key may generate images at all: a key
+whose image quota is 0 (common on the free tier) fails its first try-on with
+"no_quota" in the fitting room's Dev note, and needs billing turned on.
+`);

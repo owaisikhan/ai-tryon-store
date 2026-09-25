@@ -18,6 +18,7 @@ import catalogue from "./catalogue.mjs";
 import fittingRoom from "./fitting-room.mjs";
 import networkDiagnosis from "./network-diagnosis.mjs";
 import overflow from "./overflow.mjs";
+import quotaDiagnosis from "./quota-diagnosis.mjs";
 
 const args = Object.fromEntries(
   process.argv.slice(2).reduce((acc, a, i, all) => {
@@ -27,7 +28,7 @@ const args = Object.fromEntries(
 );
 
 const BASE = args.base || "http://localhost:3000";
-const ALL = { catalogue, "fitting-room": fittingRoom, "network-diagnosis": networkDiagnosis, overflow };
+const ALL = { catalogue, "fitting-room": fittingRoom, "network-diagnosis": networkDiagnosis, "quota-diagnosis": quotaDiagnosis, overflow };
 const only = typeof args.only === "string" ? args.only.split(",") : Object.keys(ALL);
 
 // In Claude Code on the web, Chromium is preinstalled at /opt/pw-browsers and

@@ -37,7 +37,7 @@ npm install
 cp .env.example .env.local        # add GEMINI_API_KEY, or set TRYON_MOCK=1
 npm run dev                       # http://localhost:3000
 npm run dev:mock                  # same, but try-on is composited locally, no Gemini
-npm run doctor                    # free check: key, DNS, HTTPS to Google, key + model access
+npm run doctor                    # free check: key, DNS, HTTPS, key + model, photo upload via the SDK
 ```
 
 Checks (Playwright, against a production build in mock mode):

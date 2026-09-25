@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.2 (2026-09-25)
+
+- `npm run doctor` step 5: sends the app's real request shape (a POST with a
+  model photo and a garment photo through the Gemini SDK) to the free
+  countTokens endpoint. Steps 1 to 4 passed on a machine where a try-on had
+  failed with "fetch failed"; a network that passes small requests but cuts
+  off uploads would have looked healthy.
+- A rejected key (HTTP 401 or 400) gets the same advice. Dropped the "keys
+  usually start with AIza" note: a working 53-character key disproved it.
+
 ## 0.1.1 (2026-09-25)
 
 - Fixed: a try-on that could not reach Google showed only "Dev note:

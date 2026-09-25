@@ -39,8 +39,9 @@ Open http://localhost:3000.
 
 4. Restart `npm run dev`.
 5. Run `npm run doctor`. It checks the key, DNS, the HTTPS connection to
-   Google and that the image model is available to your key, without
-   generating anything (so it costs nothing).
+   Google, that the image model is available to your key, and that an upload
+   carrying two photos gets through (the same request shape a try-on sends,
+   through the same SDK). It generates nothing, so it costs nothing.
 
 Creating a key is free. Whether image output is included in the free tier
 changes from time to time: at the time of writing, image generation with
@@ -91,7 +92,10 @@ terminal running `npm run dev`. Shoppers only ever see the plain message.
 | rate limit (429) | quota reached | wait for the countdown, or check limits |
 
 `npm run doctor` runs the same checks outside the app and says which step
-fails. Restart the dev server after changing `.env.local`.
+fails. If every step passes but a try-on failed earlier, the block was
+probably temporary (a VPN or antivirus switching on); try again, and the Dev
+note will name the cause if it happens again. Restart the dev server after
+changing `.env.local`.
 
 ## How the try-on works
 

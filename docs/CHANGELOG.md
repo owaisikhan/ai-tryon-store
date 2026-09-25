@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.4 (2026-09-25)
+
+- Added the send-to-room flight from the reference recording, which the first
+  build missed: tapping a product image or its hanger flies a copy of the
+  image in an arc onto the model, the piece pops into "Your picks" as it
+  lands, and the try-on starts. Reduced motion skips the flight.
+- Tapping a product image now tries it on (before, only the hanger did).
+- Check extended: the flight happens and is cleaned up, and reduced motion
+  skips it; proven by removing the flight.
+
 ## 0.1.3 (2026-09-25)
 
 - Fixed: every Gemini 429 showed "busy, try again in 39s", but a key with an

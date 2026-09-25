@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useMemo, useState } from "react
 import { getModels, getProduct } from "@/app/_lib/catalog";
 import { MAX_CHAIN, displacedBy, visiblePicks } from "@/app/_lib/garment-slots";
 import { roomStore } from "@/app/_lib/fitting-room/fitting-room-store";
+import { flyToRoom } from "@/app/_lib/fitting-room/fly-to-room";
 import { useTryOn } from "@/app/_lib/fitting-room/use-try-on";
 import { toast } from "@/app/_lib/stores/toast-store";
 
@@ -53,6 +54,20 @@ export function FittingRoomProvider({ children }) {
     if (next.length > MAX_CHAIN) next = [...worn.filter((p) => !swapped.includes(p)).map((p) => p.id), product.id];
     roomStore.setState({ ...current, chain: next });
   }, []);
+
+  // A tap on a card (hanger or image): open the room, fly the product image
+  // to the model like the reference, and add the piece as it lands. A piece
+  // already on skips the flight and just says so.
+  const sendToRoom = useCallback(
+    async (product, fromEl) => {
+      const worn = visiblePicks(roomStore.getSnapshot().chain, getProduct);
+      if (worn.some((p) => p.id === product.id)) return addPiece(product);
+      setOpen(true);
+      await flyToRoom(fromEl, product.image);
+      addPiece(product);
+    },
+    [addPiece],
+  );
 
   // Removing rebuilds the chain from the pieces still worn, in order. When
   // that equals an earlier prefix, its photo is already cached.
@@ -104,8 +119,8 @@ export function FittingRoomProvider({ children }) {
     picks,
     isPicked: (id) => picks.some((p) => p.id === id),
     addPiece,
+    sendToRoom,
     removePiece,
-    togglePiece: (product) => (picks.some((p) => p.id === product.id) ? removePiece(product.id) : addPiece(product)),
     startOver,
     tryOn,
     preferGender,

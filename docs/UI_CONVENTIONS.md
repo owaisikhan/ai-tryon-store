@@ -60,6 +60,17 @@ a "Sale" tag.
 - **Drawers** (filters on phones, bag) are native `<dialog>` sheets; the page
   behind is locked.
 
+## Motion
+
+- **Send to the fitting room** (`app/_lib/fitting-room/fly-to-room.js`): a tap
+  on a product image or its hanger opens the room, then a copy of the image
+  lifts out of the card, tilts, arcs to the model's chest while shrinking to
+  about half size, and fades as it lands (760ms, Web Animations API). The
+  piece is added on landing, so the tray thumbnail pops in (`animate-pop-in`)
+  and "Dressing your model" starts right after, as in the reference
+  recording. The photo gives a short orange ring pulse. A drag and drop needs
+  no flight. With reduced motion, nothing flies; the piece goes on at once.
+
 ## Interaction rules
 
 - Every tap target is at least 44px.

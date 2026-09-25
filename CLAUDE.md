@@ -73,7 +73,8 @@ app/
     garment-slots.js         layering rules shared by client and server
     format-helpers.js  siteConfig.js
     stores/                  cart, wishlist, toast (useSyncExternalStore + localStorage)
-    fitting-room/            client: provider, use-try-on hook, fetch wrapper, upload resize
+    fitting-room/            client: provider, use-try-on hook, fetch wrapper, upload resize,
+                             fly-to-room (the send-to-room flight)
     tryon/                   server-only: config, service, gemini, prompt, cache, images, mock,
                              rate-limit, errors; network-diagnosis.mjs and quota-diagnosis.mjs
                              are pure (.mjs so plain Node checks and the doctor import them)
@@ -93,7 +94,10 @@ docs/                        UI_CONVENTIONS.md, CHANGELOG.md
 ## Where the try-on logic lives
 
 ```
-ProductCard hanger / DragLayer drop
+ProductCard image or hanger tap
+  -> FittingRoomProvider.sendToRoom      opens the room, flyToRoom() animates the
+                                         image to the model (fly-to-room.js), then:
+DragLayer drop (no flight) and landing both call
   -> FittingRoomProvider.addPiece        chain = [...chain, productId] (persisted)
   -> useTryOn (app/_lib/fitting-room/use-try-on.js)
        finds the longest prefix of the chain it already has a photo for,

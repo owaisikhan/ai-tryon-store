@@ -1,7 +1,8 @@
 // The fitting room end to end, against a server in mock mode:
 // hanger, drag and drop, layering, same-slot swap, instant undo from the
-// cache, and Start over. It refuses to run against real Gemini, so a check
-// can never spend quota or send a photo anywhere.
+// cache, Start over, and the image-tap flight to the model. It refuses to
+// run against real Gemini, so a check can never spend quota or send a photo
+// anywhere.
 
 const ROOM = 'aside[aria-label="Fitting room"]';
 
@@ -17,6 +18,11 @@ async function waitForPieces(page, n) {
     { sel: ROOM, n },
     { timeout: 20000 },
   );
+}
+
+// Taps fly first and add the piece as it lands, so wait for that piece.
+async function waitForPick(page, name) {
+  await page.locator(ROOM).getByRole("button", { name: `Take off ${name}` }).waitFor({ timeout: 5000 });
 }
 
 export default async function fittingRoom({ base, browser, ok }) {
@@ -38,12 +44,13 @@ export default async function fittingRoom({ base, browser, ok }) {
 
   // 1. Hanger adds a piece and a photo comes back.
   await page.getByRole("button", { name: "Try on White Oxford Shirt" }).click();
+  await waitForPick(page, "White Oxford Shirt");
   await waitForPieces(page, 1);
   ok("hanger opens the room and dresses the model", true);
   const afterShirt = await page.locator(`${ROOM} img[alt*='wearing']`).getAttribute("src");
 
   // 2. Drag a jacket onto the model: it layers on top.
-  const card = page.locator("article", { hasText: "Olive Bomber Jacket" }).locator("div[title^='Drag']");
+  const card = page.locator("article", { hasText: "Olive Bomber Jacket" }).locator("div[title^='Tap']");
   await card.scrollIntoViewIfNeeded();
   const from = await card.boundingBox();
   const to = await page.locator(`${ROOM} .aspect-\\[3\\/4\\]`).first().boundingBox();
@@ -57,6 +64,7 @@ export default async function fittingRoom({ base, browser, ok }) {
 
   // 3. A second top swaps out the first instead of stacking.
   await page.getByRole("button", { name: "Try on Black Heavyweight Tee" }).click();
+  await waitForPick(page, "Black Heavyweight Tee");
   await waitForPieces(page, 2);
   const swapped = (await page.getByText(/Swapped White Oxford Shirt for Black Heavyweight Tee/).count()) > 0;
   const shirtGone = (await page.locator(ROOM).getByRole("button", { name: "Take off White Oxford Shirt" }).count()) === 0;
@@ -67,6 +75,7 @@ export default async function fittingRoom({ base, browser, ok }) {
   await waitForPieces(page, 0);
   const before = tryOnCalls;
   await page.getByRole("button", { name: "Try on White Oxford Shirt" }).click();
+  await waitForPick(page, "White Oxford Shirt");
   await waitForPieces(page, 1);
   const again = await page.locator(`${ROOM} img[alt*='wearing']`).getAttribute("src");
   ok("a look made before is served from the cache", tryOnCalls === before && again === afterShirt, `${tryOnCalls - before} new request(s)`);
@@ -77,6 +86,36 @@ export default async function fittingRoom({ base, browser, ok }) {
   const bare = await page.locator(`${ROOM} img`).first().getAttribute("src");
   ok("Start over shows the model without picks", !bare.startsWith("data:"));
 
+  // 6. Tapping a product image flies a copy to the model (as in the reference
+  //    recording), adds the piece as it lands, and cleans the copy up.
+  await page.getByRole("button", { name: "Close fitting room" }).click();
+  await page.locator("article", { hasText: "Sage Pleated Midi Skirt" }).locator("div[title^='Tap']").click();
+  const flew = await page
+    .waitForSelector("[data-fly-ghost]", { timeout: 3000 })
+    .then(() => true)
+    .catch(() => false);
+  await waitForPick(page, "Sage Pleated Midi Skirt");
+  await waitForPieces(page, 1);
+  const cleaned = (await page.locator("[data-fly-ghost]").count()) === 0;
+  ok("tapping a product image flies it to the model, then puts it on", flew && cleaned, `flew ${flew}, cleaned ${cleaned}`);
+
   ok("no console errors during the flow", errors.length === 0, errors.slice(0, 2).join(" | "));
   await context.close();
+
+  // 7. With reduced motion, nothing flies but the piece still goes on.
+  const calm = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: "reduce" });
+  const still = await calm.newPage();
+  await still.goto(`${base}/`, { waitUntil: "networkidle" });
+  let ghostSeen = false;
+  await still.exposeFunction("__ghostSeen", () => (ghostSeen = true));
+  await still.evaluate(() =>
+    new MutationObserver(() => document.querySelector("[data-fly-ghost]") && window.__ghostSeen()).observe(document.body, {
+      childList: true,
+    }),
+  );
+  await still.getByRole("button", { name: "Try on Charcoal Wool Trousers" }).click();
+  await waitForPick(still, "Charcoal Wool Trousers");
+  await waitForPieces(still, 1);
+  ok("reduced motion skips the flight and still adds the piece", !ghostSeen);
+  await calm.close();
 }

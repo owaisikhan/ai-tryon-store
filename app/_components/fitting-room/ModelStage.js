@@ -22,6 +22,7 @@ export default function ModelStage({ mock }) {
   return (
     <div
       ref={setNodeRef}
+      data-fly-target="stage"
       className={clsx(
         "relative mx-auto aspect-[3/4] w-full max-w-[min(100%,calc(46dvh*0.75))] overflow-hidden rounded-xl bg-studio transition-shadow",
         dragging && "ring-2 ring-accent/50",

@@ -27,12 +27,12 @@ export default function PicksTray() {
             isOver ? "border-accent bg-accent-soft" : dragging ? "border-accent/60" : "border-border",
           )}
         >
-          Drag a piece here, or tap the hanger on any product.
+          Drag a piece here, or tap any product.
         </p>
       ) : (
         <ul className={clsx("flex flex-wrap gap-2 rounded-xl p-1 transition-colors", isOver && "bg-accent-soft")}>
           {picks.map((p) => (
-            <li key={p.id} className="relative">
+            <li key={p.id} className="relative animate-pop-in">
               <div className="relative size-12 overflow-hidden rounded-lg bg-surface-2" title={p.name}>
                 <Image src={p.image} alt={p.name} fill sizes="48px" className="object-contain p-1" />
                 {workingId === p.id && (

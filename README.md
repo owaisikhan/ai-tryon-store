@@ -2,7 +2,7 @@
 
 A clothing store with a fitting room. Pick one of eight preset models (men and
 women, four body types, a range of skin tones) or upload your own photo, then
-tap the hanger on any piece, or drag its card onto the model. Gemini 2.5 Flash
+tap any piece (it flies onto the model), or drag its card there. Gemini 2.5 Flash
 Image returns a photo of the model wearing it. Add a jacket and it goes on
 top; add new trousers and they replace the old ones; Start over clears the
 look.

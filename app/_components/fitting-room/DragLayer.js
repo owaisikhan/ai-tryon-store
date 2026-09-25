@@ -12,6 +12,7 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { useFittingRoom } from "@/app/_lib/fitting-room/FittingRoomProvider";
+import { markDragEnd } from "@/app/_lib/fitting-room/fly-to-room";
 
 // Drop where the pointer is; fall back to overlap for fast flicks.
 function collision(args) {
@@ -42,9 +43,13 @@ export default function DragLayer({ children }) {
       onDragEnd={({ active, over }) => {
         const product = active.data.current?.product;
         setDragging(null);
+        markDragEnd();
         if (product && over && String(over.id).startsWith("fitting-room")) addPiece(product);
       }}
-      onDragCancel={() => setDragging(null)}
+      onDragCancel={() => {
+        setDragging(null);
+        markDragEnd();
+      }}
     >
       {children}
       <DragOverlay dropAnimation={null}>

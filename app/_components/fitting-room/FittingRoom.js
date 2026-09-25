@@ -42,7 +42,7 @@ export default function FittingRoom() {
       <div className="flex items-start justify-between gap-3 px-4 pb-3 pt-4">
         <div>
           <h2 className="text-base font-semibold">Fitting room</h2>
-          <p className="mt-0.5 text-xs text-muted">Tap the hanger on any product, or drag it onto the model.</p>
+          <p className="mt-0.5 text-xs text-muted">Tap any product to try it on, or drag it onto the model.</p>
         </div>
         <button
           type="button"

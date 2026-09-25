@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useRef, useState } from "react";
 import clsx from "clsx";
 import { useDraggable } from "@dnd-kit/core";
 import { Heart, ShoppingBag } from "lucide-react";
@@ -8,6 +9,7 @@ import HangerIcon from "@/app/_components/ui/HangerIcon";
 import Price from "@/app/_components/ui/Price";
 import RatingPill from "@/app/_components/ui/RatingPill";
 import { useFittingRoom } from "@/app/_lib/fitting-room/FittingRoomProvider";
+import { justDragged } from "@/app/_lib/fitting-room/fly-to-room";
 import { addToCart } from "@/app/_lib/stores/cart-store";
 import { toast } from "@/app/_lib/stores/toast-store";
 import { toggleWishlist } from "@/app/_lib/stores/wishlist-store";
@@ -16,14 +18,27 @@ const circle =
   "grid size-10 place-items-center rounded-full transition-colors focus-visible:outline-offset-1";
 
 export default function ProductCard({ product, saved, priority = false }) {
-  const { isPicked, togglePiece } = useFittingRoom();
+  const { isPicked, sendToRoom, removePiece } = useFittingRoom();
   const picked = isPicked(product.id);
+  const [flying, setFlying] = useState(false);
+  const mediaRef = useRef(null);
 
   // The image is the drag handle; a short move threshold keeps clicks clicks.
   const { setNodeRef, listeners, isDragging } = useDraggable({
     id: `product:${product.id}`,
     data: { product },
   });
+
+  // Hanger or image tap: the product image flies to the model, then goes on.
+  async function tryOn() {
+    if (flying) return;
+    setFlying(true);
+    try {
+      await sendToRoom(product, mediaRef.current);
+    } finally {
+      setFlying(false);
+    }
+  }
 
   function handleAddToCart() {
     addToCart(product.id);
@@ -38,14 +53,18 @@ export default function ProductCard({ product, saved, priority = false }) {
       )}
     >
       <div
-        ref={setNodeRef}
+        ref={(node) => {
+          setNodeRef(node);
+          mediaRef.current = node;
+        }}
         {...listeners}
+        onClick={() => !justDragged() && tryOn()}
         className={clsx(
           "relative aspect-square touch-manipulation select-none",
-          "cursor-grab active:cursor-grabbing",
+          "cursor-pointer active:cursor-grabbing",
           isDragging && "opacity-40",
         )}
-        title="Drag onto the model to try it on"
+        title="Tap to try it on, or drag it onto the model"
       >
         <Image
           src={product.image}
@@ -70,13 +89,13 @@ export default function ProductCard({ product, saved, priority = false }) {
         </button>
         <button
           type="button"
-          onClick={() => togglePiece(product)}
-          aria-pressed={picked}
+          onClick={() => (picked ? removePiece(product.id) : tryOn())}
+          aria-pressed={picked || flying}
           aria-label={picked ? `Take off ${product.name}` : `Try on ${product.name}`}
           title={picked ? "Remove from the fitting room" : "Try it on"}
           className={clsx(
             circle,
-            picked
+            picked || flying
               ? "bg-accent text-on-accent hover:bg-accent-hover"
               : "bg-surface-2/90 text-muted hover:bg-accent hover:text-on-accent",
           )}

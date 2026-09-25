@@ -21,6 +21,7 @@ for the rules.
 | L-003 | 2026-09-25 | gap | No playbook for AI image features (try-on): server route, per-step chaining, result cache, mock mode | type: ecommerce | logged |
 | L-004 | 2026-09-25 | gotcha | Read `error.cause` on "fetch failed" and ship `npm run doctor` for any external API | all | ready |
 | L-005 | 2026-09-25 | gotcha | A 429 is not always "wait": read the quota body; `limit: 0` means billing, not a countdown | all | ready |
+| L-006 | 2026-09-25 | correction | From a reference recording, list every motion frame by frame before building, not only the layout | type: site-clone | logged |
 
 ## Entries
 
@@ -63,3 +64,11 @@ for the rules.
 - **Scope:** all (any app that calls a metered AI API)
 - **Target in skill:** references/types/ai-chatbot.md (error handling), with L-004
 - **Status:** ready
+
+### L-006 · 2026-09-25 · medium · correction
+- **Said / saw:** "u didnt add the animation, when any product image is clicked it flies toward the avatar like in the video, can u do that"
+- **Context:** the first build studied the 10 s reference at 1 to 2 frames per second, captured the layout and states, and missed the 0.7 s flight of the product image onto the model
+- **Lesson:** When a reference is a recording, extract frames densely (10 fps) around every interaction and write each motion down as a requirement (what moves, from where to where, how long, what happens on landing) before building. A 1 fps contact sheet shows states and hides transitions, and transitions are often the part the client is showing off.
+- **Scope:** type: site-clone (and any build from a reference video)
+- **Target in skill:** references/types/site-clone.md
+- **Status:** logged

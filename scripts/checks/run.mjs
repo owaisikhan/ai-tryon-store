@@ -16,6 +16,7 @@ import { chromium } from "playwright";
 // Add one module per bug that shipped or nearly did, and register it below.
 import catalogue from "./catalogue.mjs";
 import fittingRoom from "./fitting-room.mjs";
+import networkDiagnosis from "./network-diagnosis.mjs";
 import overflow from "./overflow.mjs";
 
 const args = Object.fromEntries(
@@ -26,7 +27,7 @@ const args = Object.fromEntries(
 );
 
 const BASE = args.base || "http://localhost:3000";
-const ALL = { catalogue, "fitting-room": fittingRoom, overflow };
+const ALL = { catalogue, "fitting-room": fittingRoom, "network-diagnosis": networkDiagnosis, overflow };
 const only = typeof args.only === "string" ? args.only.split(",") : Object.keys(ALL);
 
 // In Claude Code on the web, Chromium is preinstalled at /opt/pw-browsers and

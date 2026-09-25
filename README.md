@@ -38,6 +38,9 @@ Open http://localhost:3000.
    ```
 
 4. Restart `npm run dev`.
+5. Run `npm run doctor`. It checks the key, DNS, the HTTPS connection to
+   Google and that the image model is available to your key, without
+   generating anything (so it costs nothing).
 
 Creating a key is free. Whether image output is included in the free tier
 changes from time to time: at the time of writing, image generation with
@@ -55,6 +58,7 @@ never sent to the browser. Do not rename it with a `NEXT_PUBLIC_` prefix.
 |---|---|---|
 | `GEMINI_API_KEY` | yes, unless mock | Google AI Studio key, server only |
 | `GEMINI_IMAGE_MODEL` | no | Defaults to `gemini-2.5-flash-image`. Change it if Google renames the model |
+| `GEMINI_BASE_URL` | no | Send Gemini calls through a gateway instead of `generativelanguage.googleapis.com` |
 | `TRYON_MOCK` | no | `1` lays the garment over the photo locally instead of calling Gemini |
 | `TRYON_RATE_LIMIT_PER_MIN` | no | Try-ons per minute per visitor IP, default 12 |
 | `TRYON_CACHE_DIR` | no | Where generated photos are cached on disk, default the OS temp dir |
@@ -65,10 +69,29 @@ never sent to the browser. Do not rename it with a `NEXT_PUBLIC_` prefix.
 |---|---|
 | `npm run dev` / `npm run dev:mock` | Dev server, with real or mock try-on |
 | `npm run build` then `npm run start` / `npm run start:mock` | Production build and server |
-| `npm run check` | Playwright regression checks (catalogue, fitting room, overflow). Run against `start:mock` |
+| `npm run doctor` | Checks your key and the connection to Google step by step, free |
+| `npm run check` | Regression checks (catalogue, fitting room, network diagnosis, overflow). Run against `start:mock` |
 | `npm run lint` | ESLint |
 | `npm run slop` | Fails on em or en dashes and filler copy anywhere in the repo |
 | `npm run placeholders` | Regenerates missing placeholder images (`-- --force` to redraw all) |
+
+## Troubleshooting a failed try-on
+
+In development, the fitting room shows a **Dev note** under the error with
+what went wrong and a **How to fix** section; the same text is printed in the
+terminal running `npm run dev`. Shoppers only ever see the plain message.
+
+| Dev note says | Meaning | Fix |
+|---|---|---|
+| could not connect to Google's Gemini API (ENOTFOUND, EAI_AGAIN) | DNS on this machine cannot find Google's API | check the connection, try DNS 8.8.8.8 or 1.1.1.1, switch a VPN on or off |
+| could not connect (ECONNREFUSED, ECONNRESET, ETIMEDOUT) | a firewall, VPN or network filter blocks the connection | try another network (a phone hotspot is a quick test); behind a proxy, set `NODE_USE_ENV_PROXY=1` as well as `HTTPS_PROXY` |
+| could not connect (SELF_SIGNED_CERT_IN_CHAIN or another certificate code) | antivirus or a company proxy is intercepting HTTPS | turn off HTTPS scanning for Node, or set `NODE_EXTRA_CA_CERTS` to its root certificate |
+| Gemini rejected GEMINI_API_KEY | wrong or mistyped key | copy it again from AI Studio into `.env.local` |
+| 403 | key restricted, or image output needs billing | use an unrestricted key; check billing in AI Studio |
+| rate limit (429) | quota reached | wait for the countdown, or check limits |
+
+`npm run doctor` runs the same checks outside the app and says which step
+fails. Restart the dev server after changing `.env.local`.
 
 ## How the try-on works
 

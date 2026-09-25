@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.1.1 (2026-09-25)
+
+- Fixed: a try-on that could not reach Google showed only "Dev note:
+  network: fetch failed". Node's fetch hides the reason in `error.cause`; the
+  route now reads it (`app/_lib/tryon/network-diagnosis.mjs`) and says whether
+  DNS, a blocked connection or an intercepted certificate is to blame, with a
+  collapsible "How to fix". Shopper message: "The fitting room cannot reach
+  the try-on service right now."
+- Fixed: a long dev note pushed the error card past the top of the photo and
+  clipped the message. The card now fits the photo and scrolls inside.
+- Added `npm run doctor`: checks key, DNS, HTTPS to Google and key plus model
+  access without generating an image.
+- Added optional `GEMINI_BASE_URL` for a gateway; one quiet retry when a
+  connection drops mid-request; Next's dev button moved to the bottom right,
+  away from the fitting room.
+- Check added: `network-diagnosis`, proven by reintroducing the bug.
+
 ## 0.1.0 (2026-09-25)
 
 First build, on `main`.

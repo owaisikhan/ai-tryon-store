@@ -5,6 +5,8 @@ export const tryOnConfig = {
   // Gemini 2.5 Flash Image, the image editing model. Override without a code
   // change if Google renames or supersedes it.
   model: process.env.GEMINI_IMAGE_MODEL || "gemini-2.5-flash-image",
+  // Optional: send Gemini calls through a gateway instead of Google directly.
+  baseUrl: process.env.GEMINI_BASE_URL || "",
   // TRYON_MOCK=1 composites the garment onto the photo locally instead of
   // calling Gemini. For building the UI without spending quota.
   mock: process.env.TRYON_MOCK === "1" || process.env.TRYON_MOCK === "true",

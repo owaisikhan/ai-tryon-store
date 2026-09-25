@@ -54,7 +54,7 @@ export async function POST(request) {
             hint: error?.message,
           });
 
-    if (e.status >= 500) console.error(`[tryon] ${e.code}: ${e.hint ?? e.message}`);
+    if (e.status >= 500) console.error(`[tryon] ${e.code}: ${[e.hint ?? e.message, e.advice].filter(Boolean).join(" ")}`);
 
     return Response.json(
       {
@@ -63,6 +63,7 @@ export async function POST(request) {
           message: e.message,
           retryAfter: e.retryAfter ?? undefined,
           hint: isDev ? (e.hint ?? undefined) : undefined,
+          advice: isDev ? (e.advice ?? undefined) : undefined,
         },
       },
       { status: e.status, headers: e.retryAfter ? { "Retry-After": String(e.retryAfter) } : undefined },

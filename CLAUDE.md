@@ -37,6 +37,7 @@ npm install
 cp .env.example .env.local        # add GEMINI_API_KEY, or set TRYON_MOCK=1
 npm run dev                       # http://localhost:3000
 npm run dev:mock                  # same, but try-on is composited locally, no Gemini
+npm run doctor                    # free check: key, DNS, HTTPS to Google, key + model access
 ```
 
 Checks (Playwright, against a production build in mock mode):
@@ -74,15 +75,17 @@ app/
     stores/                  cart, wishlist, toast (useSyncExternalStore + localStorage)
     fitting-room/            client: provider, use-try-on hook, fetch wrapper, upload resize
     tryon/                   server-only: config, service, gemini, prompt, cache, images, mock,
-                             rate-limit, errors
+                             rate-limit, errors; network-diagnosis.mjs is pure and shared with
+                             the doctor script (.mjs so plain Node imports it without warnings)
   _styles/globals.css        @theme tokens (by role), base rules, range slider
 public/
   models/models.json         preset models: id, name, gender, bodyType, skinTone, image
   models/*.webp  products/*.webp   placeholder images (see Decisions)
 scripts/
   make-placeholders.mjs      regenerates placeholder images (--force to overwrite)
+  tryon-doctor.mjs           npm run doctor (reads .env.local via @next/env)
   slop_scan.py               dash and AI-slop scanner (copied from kodexa-builder)
-  checks/                    npm run check: catalogue, fitting-room, overflow
+  checks/                    npm run check: catalogue, fitting-room, network-diagnosis, overflow
 docs/                        UI_CONVENTIONS.md, CHANGELOG.md
 ```
 
@@ -117,8 +120,12 @@ Key ideas:
   in the OS temp dir or `TRYON_CACHE_DIR`. Because the client chains the exact
   bytes the server returned, any combination any visitor made is reused.
 - **Errors.** Everything the route refuses is a `TryOnError(status, code,
-  message, { retryAfter, hint })`. `message` is shopper-facing; `hint` is sent
-  only in development and shown in the panel as "Dev note". Gemini 429 becomes
+  message, { retryAfter, hint, advice })`. `message` is shopper-facing; `hint`
+  (one line: what failed) and `advice` (how to fix it) are sent only in
+  development and shown in the panel as "Dev note" plus a collapsible "How to
+  fix". A network failure (Node's bare "fetch failed") is translated by
+  `network-diagnosis.mjs` from `error.cause.code` into DNS, blocked
+  connection or intercepted certificate, code `unreachable`. Gemini 429 becomes
   a 429 with `retryAfter` from Gemini's `retryDelay`, and the panel counts down
   before Retry comes back. Our own per-IP limit (12/min) returns the same shape.
 - **Prompt.** `tryon/prompt.js`: identity and scene locked first, then the

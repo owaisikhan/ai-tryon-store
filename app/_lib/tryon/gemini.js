@@ -2,6 +2,7 @@ import "server-only";
 import { ApiError, GoogleGenAI } from "@google/genai";
 import { tryOnConfig } from "@/app/_lib/tryon/config";
 import { TryOnError, parseRetryDelay } from "@/app/_lib/tryon/errors";
+import { TRANSIENT, diagnoseNetworkError } from "@/app/_lib/tryon/network-diagnosis.mjs";
 
 let client = null;
 function getClient() {
@@ -10,7 +11,10 @@ function getClient() {
       hint: "Set GEMINI_API_KEY in .env.local (see README), or TRYON_MOCK=1 to test the flow without Gemini.",
     });
   }
-  client ??= new GoogleGenAI({ apiKey: tryOnConfig.apiKey });
+  client ??= new GoogleGenAI({
+    apiKey: tryOnConfig.apiKey,
+    ...(tryOnConfig.baseUrl ? { httpOptions: { baseUrl: tryOnConfig.baseUrl } } : {}),
+  });
   return client;
 }
 
@@ -18,6 +22,17 @@ const BLOCKED = new Set(["SAFETY", "IMAGE_SAFETY", "PROHIBITED_CONTENT", "BLOCKL
 
 function translateError(error) {
   if (error instanceof TryOnError) return error;
+
+  // No HTTP answer at all: DNS, a blocked connection, an intercepted
+  // certificate. Say which, instead of Node's bare "fetch failed".
+  const network = diagnoseNetworkError(error, process.env);
+  if (network) {
+    return new TryOnError(503, "unreachable", "The fitting room cannot reach the try-on service right now. Please try again in a moment.", {
+      hint: `This server could not connect to Google's Gemini API (${network.code}: ${network.detail}).`,
+      advice: `${network.advice} Run "npm run doctor" for a step-by-step check.`,
+    });
+  }
+
   const status = error instanceof ApiError ? error.status : Number(error?.status) || 0;
   const text = error?.message ?? "";
 
@@ -85,14 +100,21 @@ async function callOnce({ base, garment, instruction, aspectRatio }) {
   });
 }
 
-// One try-on edit. Retries once on a transient 500 or 503; never on 429,
-// which gets reported to the shopper with the wait Gemini asked for.
+function isTransient(error) {
+  const status = error instanceof ApiError ? error.status : 0;
+  if (status === 500 || status === 503) return true;
+  const network = diagnoseNetworkError(error);
+  return Boolean(network && TRANSIENT.has(network.code));
+}
+
+// One try-on edit. Retries once on a transient 500 or 503, or a connection
+// that opened and then dropped; never on 429, which gets reported to the
+// shopper with the wait Gemini asked for.
 export async function generateTryOn(input) {
   try {
     return await callOnce(input);
   } catch (error) {
-    const status = error instanceof ApiError ? error.status : 0;
-    if (status === 500 || status === 503) {
+    if (isTransient(error)) {
       await new Promise((resolve) => setTimeout(resolve, 1500));
       try {
         return await callOnce(input);

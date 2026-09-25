@@ -19,6 +19,7 @@ for the rules.
 | L-001 | 2026-09-25 | rule | Start every repo on `main`; branch from it afterwards | all | ready |
 | L-002 | 2026-09-25 | gotcha | Treat a missing query param as missing before `Number()`; guard with a full-catalogue check | type: ecommerce | logged |
 | L-003 | 2026-09-25 | gap | No playbook for AI image features (try-on): server route, per-step chaining, result cache, mock mode | type: ecommerce | logged |
+| L-004 | 2026-09-25 | gotcha | Read `error.cause` on "fetch failed" and ship `npm run doctor` for any external API | all | ready |
 
 ## Entries
 
@@ -45,3 +46,11 @@ for the rules.
 - **Scope:** type: ecommerce (and any AI image feature)
 - **Target in skill:** new references/types/ai-image.md, or a section in ai-chatbot.md
 - **Status:** logged
+
+### L-004 · 2026-09-25 · medium · gotcha
+- **Said / saw:** user screenshot of the fitting room: "Dev note: network: fetch failed" and a "?"; the route and SDK worked from the cloud session, so the cause was the user's local network, which the message did not name
+- **Context:** app/_lib/tryon/gemini.js translateError; fixed with app/_lib/tryon/network-diagnosis.mjs and scripts/tryon-doctor.mjs
+- **Lesson:** Node's fetch reports every network failure as "TypeError: fetch failed" and keeps the reason in `error.cause.code` (ENOTFOUND, ECONNREFUSED, a TLS code, or an AggregateError of them). Any server code calling an external API translates that cause into plain advice (DNS, blocked connection, intercepted certificate, proxy ignored without NODE_USE_ENV_PROXY=1), and the repo ships an `npm run doctor` that checks the key, DNS, HTTPS reach and key access without spending quota. Dev hints are split into a one-line cause and a collapsible fix so they never cover the UI they explain.
+- **Scope:** all (any app that calls an external API from the server)
+- **Target in skill:** references/types/ai-chatbot.md (error handling) and SKILL.md section 5 ("How done is proven")
+- **Status:** ready

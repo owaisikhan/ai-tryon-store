@@ -20,13 +20,23 @@ export default function TryOnError({ error, onRetry }) {
   return (
     <div
       role="alert"
-      className="absolute inset-x-3 bottom-3 flex flex-col gap-2 rounded-xl border border-danger/30 bg-surface/95 p-3 text-sm shadow-[var(--shadow-float)]"
+      className="absolute inset-x-3 bottom-3 flex max-h-[calc(100%-1.5rem)] flex-col gap-2 overflow-y-auto rounded-xl border border-danger/30 bg-surface/95 p-3 text-sm shadow-[var(--shadow-float)]"
     >
       <p className="flex items-start gap-2 text-text">
         <CircleAlert className="mt-0.5 size-4 shrink-0 text-danger" aria-hidden="true" />
         <span>{error.message}</span>
       </p>
-      {error.hint && <p className="rounded-lg bg-surface-2 px-2.5 py-1.5 text-xs text-muted">Dev note: {error.hint}</p>}
+      {error.hint && (
+        <div className="rounded-lg bg-surface-2 px-2.5 py-1.5 text-xs text-muted">
+          <p className="break-words">Dev note: {error.hint}</p>
+          {error.advice && (
+            <details className="mt-1">
+              <summary className="cursor-pointer font-semibold text-text">How to fix</summary>
+              <p className="mt-1 break-words leading-relaxed">{error.advice}</p>
+            </details>
+          )}
+        </div>
+      )}
       <button
         type="button"
         onClick={onRetry}

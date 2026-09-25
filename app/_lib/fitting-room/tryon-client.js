@@ -1,12 +1,13 @@
 "use client";
 
 export class TryOnRequestError extends Error {
-  constructor({ status, code, message, retryAfter, hint }) {
+  constructor({ status, code, message, retryAfter, hint, advice }) {
     super(message);
     this.status = status;
     this.code = code;
     this.retryAfter = retryAfter ?? null;
     this.hint = hint ?? null;
+    this.advice = advice ?? null;
   }
 }
 
@@ -38,6 +39,7 @@ export async function requestTryOn({ base, garmentIds, note, signal }) {
       message: data?.error?.message ?? "Something went wrong while making the photo. Please try again.",
       retryAfter: data?.error?.retryAfter ?? (Number.isFinite(retryHeader) && retryHeader > 0 ? retryHeader : null),
       hint: data?.error?.hint,
+      advice: data?.error?.advice,
     });
   }
   return data;

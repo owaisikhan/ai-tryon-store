@@ -1,0 +1,10 @@
+[
+  { "id": "amara", "name": "Amara", "gender": "women", "bodyType": "curvy", "skinTone": "deep", "image": "/models/amara.webp" },
+  { "id": "lena", "name": "Lena", "gender": "women", "bodyType": "slim", "skinTone": "fair", "image": "/models/lena.webp" },
+  { "id": "priya", "name": "Priya", "gender": "women", "bodyType": "average", "skinTone": "medium brown", "image": "/models/priya.webp" },
+  { "id": "mei", "name": "Mei", "gender": "women", "bodyType": "petite", "skinTone": "light", "image": "/models/mei.webp" },
+  { "id": "omar", "name": "Omar", "gender": "men", "bodyType": "athletic", "skinTone": "olive", "image": "/models/omar.webp" },
+  { "id": "daniel", "name": "Daniel", "gender": "men", "bodyType": "slim", "skinTone": "fair", "image": "/models/daniel.webp" },
+  { "id": "kwame", "name": "Kwame", "gender": "men", "bodyType": "broad", "skinTone": "deep", "image": "/models/kwame.webp" },
+  { "id": "hiro", "name": "Hiro", "gender": "men", "bodyType": "average", "skinTone": "light", "image": "/models/hiro.webp" }
+]
